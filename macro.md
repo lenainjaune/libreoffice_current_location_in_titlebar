@@ -39,12 +39,12 @@ Sub on_DocLoad(event As Object)
 	' Based on : https://stackoverflow.com/questions/6250698/how-to-decode-url-encoded-string-in-shell#37840948
 	' Nota : I had just implemented the replace of % BUT not the replace of + (for space characters)
 	cmd = 	"bash -c " & _
-				Chr(34) & _
-					"url=" & ThisComponent.Location & _
-					" ; echo -e " & "${url//%/\\x}" & _
-					" > " & tempFileLocation & _
-				Chr(34) & _
-			""			
+			Chr(34) & _
+				"url=" & ThisComponent.Location & _
+				" ; echo -e " & "${url//%/\\x}" & _
+				" > " & tempFileLocation & _
+			Chr(34) & _
+		""			
 	Shell(cmd, 0, "", true)
 	
 	' Get decoded URL from temporarily file
