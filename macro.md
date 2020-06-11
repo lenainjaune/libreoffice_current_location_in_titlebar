@@ -29,12 +29,12 @@ Sub on_DocLoad(event As Object)
 	' URL Decode (need python v2.x) to temporarily file
 	' https://unix.stackexchange.com/questions/159253/decoding-url-encoding-percent-encoding#159254
 	cmd = 	"bash -c " & _
-				Chr(34) & _
-					"echo -n " & ThisComponent.Location & _
-					" |python -c 'import sys, urllib as ul; print ul.unquote(sys.stdin.read());'" & _
-					" > " & tempFileLocation & _
-				Chr(34) & _
-			""
+			Chr(34) & _
+				"echo -n " & ThisComponent.Location & _
+				" |python -c 'import sys, urllib as ul; print ul.unquote(sys.stdin.read());'" & _
+				" > " & tempFileLocation & _
+			Chr(34) & _
+		""
 	Shell(cmd, 0, "", true)
 	
 	' Get decoded URL from temporarily file
