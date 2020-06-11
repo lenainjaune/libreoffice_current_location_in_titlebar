@@ -1,3 +1,4 @@
+```vbs
 REM  *****  BASIC  *****
 
 ' Important : this code SHOULD be placed on ~/.config/libreoffice/4/user/basic/Standard/ macro
@@ -70,3 +71,4 @@ Function getDocumentType(component As Object) As String
 		getDocumentType = "Not a document"
 	End If
 End Function
+```
