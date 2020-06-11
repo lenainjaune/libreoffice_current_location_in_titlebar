@@ -1,4 +1,4 @@
-```vbs
+```vba
 REM  *****  BASIC  *****
 
 ' Important : this code SHOULD be placed on ~/.config/libreoffice/4/user/basic/Standard/ macro
@@ -10,9 +10,18 @@ REM  *****  BASIC  *****
 Sub on_DocLoad(event As Object)
 	' Important : This Sub SHOULD be connected to the "Open Document" event of LibreOffice.
 	' https://ask.libreoffice.org/en/question/145481/struggling-to-auto-run-a-macro/
+	' The URL in LibreOffice : https://help.libreoffice.org/3.6/Basic/Basic_Glossary/fr#Notation_URL
 	' The events in LibreOffice : https://help.libreoffice.org/4.2/Basic/Event-Driven_Macros
 	
-	' TODO : find a native way to decode URL without the need of a 3rd party tool and without storing the decoded URL in a temporarily file
+	' A big problem :
+	' A document "with space and accentué.odt" from "smb://nas.local/to to" network share
+	' when converted with ConvertFromURL() gives : 
+	' "smb://nas.local/test/to%20to/with%20space%20and%20accentu%C3%A9.odt" which is hard to read. 
+	' When I try to decode it with https://www.url-encode-decode.com/ it gives :
+	' "smb://nas.local/test/to to/with space and accentué.odt" which is more easy to read.
+	' => solution : decode URL before display it
+	
+	' TODO : find a native way to decode URL without storing the decoded URL in a temporarily file or implement a function to replace %xx (https://www.w3schools.com/tags/ref_urlencode.ASP)
 	
 	' New document => nothing to do
 	If ThisComponent.Location = "" Then 
@@ -26,15 +35,16 @@ Sub on_DocLoad(event As Object)
 	
 	tempFileLocation = Environ("HOME") & "/URL_converted"
 
-	' URL Decode (need python v2.x) to temporarily file
-	' https://unix.stackexchange.com/questions/159253/decoding-url-encoding-percent-encoding#159254
+	' URL Decode with bash to temporarily file
+	' Based on : https://stackoverflow.com/questions/6250698/how-to-decode-url-encoded-string-in-shell#37840948
+	' Nota : I had just implemented the replace of % BUT not the replace of + (for space characters)
 	cmd = 	"bash -c " & _
-			Chr(34) & _
-				"echo -n " & ThisComponent.Location & _
-				" |python -c 'import sys, urllib as ul; print ul.unquote(sys.stdin.read());'" & _
-				" > " & tempFileLocation & _
-			Chr(34) & _
-		""
+				Chr(34) & _
+					"url=" & ThisComponent.Location & _
+					" ; echo -e " & "${url//%/\\x}" & _
+					" > " & tempFileLocation & _
+				Chr(34) & _
+			""			
 	Shell(cmd, 0, "", true)
 	
 	' Get decoded URL from temporarily file
