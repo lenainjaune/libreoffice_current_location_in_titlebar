@@ -22,7 +22,7 @@ Sub on_DocLoad(event As Object)
 	' When I try to decode it with https://www.url-encode-decode.com/ it gives :
 	' "smb://nas.local/test/to to/with space and accentué.odt" which is easy to read.
 	' => solution : decode URL before display it
-	
+		
 	' TODO : find a native way to decode URL without storing the decoded URL in a temporarily file or implement a function to replace %xx (https://www.w3schools.com/tags/ref_urlencode.ASP)
 	
 	' New document => nothing to do
@@ -41,12 +41,15 @@ Sub on_DocLoad(event As Object)
 	' Based on : https://stackoverflow.com/questions/6250698/how-to-decode-url-encoded-string-in-shell#37840948
 	' Nota : I had just implemented the replace of % BUT not the replace of + (for space characters)
 	cmd = 	"bash -c " & _
-			Chr(34) & _
-				"url=" & ThisComponent.Location & _
-				" ; echo -e " & "${url//%/\\x}" & _
-				" > " & tempFileLocation & _
-			Chr(34) & _
-		""			
+				Chr(34) & _
+					"url=" &_
+						"'" &_
+							ThisComponent.Location &_
+						"'" & _
+					" ; echo -e " & "${url//%/\\x}" & _
+					" > " & tempFileLocation & _
+				Chr(34) & _
+			""			
 	Shell(cmd, 0, "", true)
 	
 	' Get decoded URL from temporarily file
@@ -82,5 +85,4 @@ Function getDocumentType(component As Object) As String
 	Else
 		getDocumentType = "Not a document"
 	End If
-End Function
-```
+End Function```

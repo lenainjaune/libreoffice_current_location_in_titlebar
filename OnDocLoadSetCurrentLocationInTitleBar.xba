@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="OnDocLoadSetCurrentLocationInTitleBar" script:language="StarBasic" script:moduleType="normal">REM  *****  BASIC  *****
+
+&apos; TODO : try to migrate this script to javascript language in the case where it can giving the same functionnalities without storing the decode URL in a temporarily file
+
+&apos; Important : this code MUST be placed on ~/.config/libreoffice/4/user/basic/Standard/ macro
+
+&apos; equivalent topics : 
+&apos; - https://ask.libreoffice.org/en/question/11292/how-to-display-full-file-path-in-window-title/
+&apos; - https://ask.libreoffice.org/en/question/44280/how-to-view-full-path-of-open-document/
+
+Sub on_DocLoad(event As Object)
+	&apos; Important : This Sub MUST be connected to the &quot;Open Document&quot; event of LibreOffice.
+	&apos; https://ask.libreoffice.org/en/question/145481/struggling-to-auto-run-a-macro/
+	&apos; The URL in LibreOffice : https://help.libreoffice.org/3.6/Basic/Basic_Glossary/fr#Notation_URL
+	&apos; The events in LibreOffice : https://help.libreoffice.org/4.2/Basic/Event-Driven_Macros
+	
+	&apos; A big problem :
+	&apos; A document &quot;with space and accentué.odt&quot; from &quot;smb://nas.local/foo bar&quot; network share
+	&apos; when converted with ConvertFromURL() gives : 
+	&apos; &quot;smb://nas.local/test/foo%20bar/with%20space%20and%20accentu%C3%A9.odt&quot; which is hard to read. 
+	&apos; When I try to decode it with https://www.url-encode-decode.com/ it gives :
+	&apos; &quot;smb://nas.local/test/to to/with space and accentué.odt&quot; which is easy to read.
+	&apos; =&gt; solution : decode URL before display it
+	
+	&apos; TODO : find a native way to decode URL without storing the decoded URL in a temporarily file or implement a function to replace %xx (https://www.w3schools.com/tags/ref_urlencode.ASP)
+	
+	&apos; New document =&gt; nothing to do
+	If ThisComponent.Location = &quot;&quot; Then 
+		Exit Sub
+	End If
+
+	Dim locationInTitleBar As String
+	Dim tempFileLocation As String
+	Dim currentController As Object
+	Dim frame As Object
+	
+	tempFileLocation = Environ(&quot;HOME&quot;) &amp; &quot;/URL_converted&quot;
+
+	&apos; URL Decode with bash to temporarily file
+	&apos; Based on : https://stackoverflow.com/questions/6250698/how-to-decode-url-encoded-string-in-shell#37840948
+	&apos; Nota : I had just implemented the replace of % BUT not the replace of + (for space characters)
+	cmd = 	&quot;bash -c &quot; &amp; _
+				Chr(34) &amp; _
+					&quot;url=&quot; &amp; ThisComponent.Location &amp; _
+					&quot; ; echo -e &quot; &amp; &quot;${url//%/\\x}&quot; &amp; _
+					&quot; &gt; &quot; &amp; tempFileLocation &amp; _
+				Chr(34) &amp; _
+			&quot;&quot;			
+	Shell(cmd, 0, &quot;&quot;, true)
+	
+	&apos; Get decoded URL from temporarily file
+	FileNo = Freefile
+	Open tempFileLocation For Input As #fileNo
+	While Not Eof(#fileNo)
+		Line Input #fileNo, locationInTitleBar
+	WEnd
+	Close #fileNo
+	Kill(tempFileLocation)
+
+	&apos; Current location in title bar
+	&apos; https://ask.libreoffice.org/en/question/147789/can-i-change-the-content-of-the-title-bar-from-a-macro/
+	currentController = ThisComponent.getCurrentController()
+	frame = currentController.getFrame()
+	frame.Title = ConvertFromURL(locationInTitleBar) &amp; &quot; - &quot; &amp; getDocumentType(thisComponent)
+End Sub
+
+&apos; Based on https://wiki.openoffice.org/wiki/Currently_active_document
+Function getDocumentType(component As Object) As String
+	If HasUnoInterfaces(component, &quot;com.sun.star.lang.XServiceInfo&quot;) Then
+		If thisComponent.supportsService (&quot;com.sun.star.text.GenericTextDocument&quot;) Then
+			getDocumentType = &quot;LibreOffice Writer&quot;
+		ElseIf thisComponent.supportsService(&quot;com.sun.star.sheet.SpreadsheetDocument&quot;) Then
+			getDocumentType = &quot;LibreOffice Calc&quot;
+		ElseIf thisComponent.supportsService(&quot;com.sun.star.presentation.PresentationDocument&quot;) Then
+			getDocumentType = &quot;LibreOffice Impress&quot;
+		ElseIf thisComponent.supportsService(&quot;com.sun.star.drawing.GenericDrawingDocument&quot;) Then
+			getDocumentType = &quot;LibreOffice Draw&quot;
+		Else
+			getDocumentType = &quot;Unknown Document type&quot;
+		End If
+	Else
+		getDocumentType = &quot;Not a document&quot;
+	End If
+End Function
+</script:module>
