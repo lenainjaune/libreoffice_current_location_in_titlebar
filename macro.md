@@ -1,24 +1,26 @@
 ```vba
 REM  *****  BASIC  *****
 
-' Important : this code SHOULD be placed on ~/.config/libreoffice/4/user/basic/Standard/ macro
+' TODO : try to migrate this script to javascript language in the case where it can giving the same functionnalities without storing the decode URL in a temporarily file
+
+' Important : this code MUST be placed on ~/.config/libreoffice/4/user/basic/Standard/ macro
 
 ' equivalent topics : 
 ' - https://ask.libreoffice.org/en/question/11292/how-to-display-full-file-path-in-window-title/
 ' - https://ask.libreoffice.org/en/question/44280/how-to-view-full-path-of-open-document/
 
 Sub on_DocLoad(event As Object)
-	' Important : This Sub SHOULD be connected to the "Open Document" event of LibreOffice.
+	' Important : This Sub MUST be connected to the "Open Document" event of LibreOffice.
 	' https://ask.libreoffice.org/en/question/145481/struggling-to-auto-run-a-macro/
 	' The URL in LibreOffice : https://help.libreoffice.org/3.6/Basic/Basic_Glossary/fr#Notation_URL
 	' The events in LibreOffice : https://help.libreoffice.org/4.2/Basic/Event-Driven_Macros
 	
 	' A big problem :
-	' A document "with space and accentué.odt" from "smb://nas.local/to to" network share
+	' A document "with space and accentué.odt" from "smb://nas.local/foo bar" network share
 	' when converted with ConvertFromURL() gives : 
-	' "smb://nas.local/test/to%20to/with%20space%20and%20accentu%C3%A9.odt" which is hard to read. 
+	' "smb://nas.local/test/foo%20bar/with%20space%20and%20accentu%C3%A9.odt" which is hard to read. 
 	' When I try to decode it with https://www.url-encode-decode.com/ it gives :
-	' "smb://nas.local/test/to to/with space and accentué.odt" which is more easy to read.
+	' "smb://nas.local/test/to to/with space and accentué.odt" which is easy to read.
 	' => solution : decode URL before display it
 	
 	' TODO : find a native way to decode URL without storing the decoded URL in a temporarily file or implement a function to replace %xx (https://www.w3schools.com/tags/ref_urlencode.ASP)
