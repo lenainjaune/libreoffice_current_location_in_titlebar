@@ -85,4 +85,5 @@ Function getDocumentType(component As Object) As String
 	Else
 		getDocumentType = "Not a document"
 	End If
-End Function```
+End Function
+```
